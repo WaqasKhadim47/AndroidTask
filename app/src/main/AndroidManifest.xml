@@ -22,7 +22,7 @@
             android:exported="false"
              />
         <activity
-            android:name=".MainActivity"
+            android:name=".Authentication.LoginScreen"
             android:exported="true"
             >
             <intent-filter>
@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Authentication.LoginScreen"
+            android:name=".MainActivity"
             android:exported="true"></activity>
     </application>
 
