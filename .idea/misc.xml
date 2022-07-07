@@ -8,7 +8,9 @@
         <entry key="app/src/main/res/drawable/round_shape.xml" value="0.112" />
         <entry key="app/src/main/res/layout/activity_login_screen.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.22135416666666666" />
+        <entry key="app/src/main/res/layout/activity_message_show_screen.xml" value="0.190625" />
         <entry key="app/src/main/res/layout/activity_signup_screen.xml" value="0.22135416666666666" />
+        <entry key="app/src/main/res/layout/notification_item.xml" value="0.7669172932330827" />
         <entry key="app/src/main/res/layout/post_item.xml" value="0.321875" />
         <entry key="app/src/main/res/layout/reuseable_textfield.xml" value="0.23541666666666666" />
       </map>

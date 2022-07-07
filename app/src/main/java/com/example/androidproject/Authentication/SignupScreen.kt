@@ -71,7 +71,7 @@ class SignupScreen : AppCompatActivity() , View.OnClickListener{
         }else if (emailField.text!!.trim().isEmpty()){
             emailField.error ="Please enter email address";
             emailField.requestFocus();
-        }else if (phoneField.text!!.trim()?.isEmpty()){
+        }else if (phoneField.text!!.trim().isEmpty()){
             phoneField.error = "Please enter phone number";
             phoneField.requestFocus();
         }else {
