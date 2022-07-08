@@ -2,10 +2,13 @@ package com.example.androidproject.Authentication
 
 import SignInModel
 import android.Manifest
+import android.app.PendingIntent
+import android.app.ProgressDialog.show
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Paint
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -18,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.androidproject.Api.ApiInterface
 import com.example.androidproject.MainActivity
+import com.example.androidproject.MessageShowScreen
 import com.example.androidproject.R
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.textfield.TextInputEditText
@@ -41,6 +45,26 @@ class LoginScreen : AppCompatActivity(), View.OnClickListener {
     private val NOTIFICATION_PERMISSION_CODE = 123
 
 
+    private fun requestNotificationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        ) return
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+        ) {
+        }
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            NOTIFICATION_PERMISSION_CODE
+        )
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_screen)
@@ -50,6 +74,19 @@ class LoginScreen : AppCompatActivity(), View.OnClickListener {
         println(
             "Firebase Data ===> ${FirebaseApp.getInstance().toString()}"
         )
+
+        if (intent.hasExtra("greeting")) {
+            val notificationIntent = Intent(this@LoginScreen, MessageShowScreen::class.java).apply {
+                flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val list = arrayListOf<String>()
+            for (key in intent?.extras?.keySet()!!) {
+                intent?.extras?.getString(key)?.let { list.add(it) }
+            }
+            notificationIntent.putExtra("notificationData", list)
+            startActivity(notificationIntent)
+        }
 
         // linking resources
         signInButton = findViewById(R.id.signInBtn)
@@ -61,7 +98,7 @@ class LoginScreen : AppCompatActivity(), View.OnClickListener {
         signUpButton.setOnClickListener(this)
         signInButton.setOnClickListener(this)
 
-        requestNotificationPermission()
+
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -78,26 +115,18 @@ class LoginScreen : AppCompatActivity(), View.OnClickListener {
 
         signUpButton.paintFlags = signUpButton.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            println("Permission Granted")
+        } else {
+            // Permission is missing and must be requested.
+            requestNotificationPermission()
+        }
+
     }
 
-    private fun requestNotificationPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_NOTIFICATION_POLICY
-            ) == PackageManager.PERMISSION_GRANTED
-        ) return
-        if (ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                Manifest.permission.ACCESS_NOTIFICATION_POLICY
-            )
-        ) {
-        }
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.ACCESS_NOTIFICATION_POLICY),
-            NOTIFICATION_PERMISSION_CODE
-        )
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -106,21 +135,19 @@ class LoginScreen : AppCompatActivity(), View.OnClickListener {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
+        println("Working is function ====> ")
         // Checking the request code of our request
         if (requestCode == NOTIFICATION_PERMISSION_CODE) {
 
             // If permission is granted
-            if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Displaying a toast
-                Toast.makeText(
-                    this,
-                    "Permission granted now you can read the storage",
-                    Toast.LENGTH_LONG
-                ).show()
+
             } else {
                 // Displaying another toast if permission is not granted
                 Toast.makeText(this, "Oops you just denied the permission", Toast.LENGTH_LONG)
                     .show()
+                requestNotificationPermission()
             }
         }
     }
@@ -149,7 +176,10 @@ class LoginScreen : AppCompatActivity(), View.OnClickListener {
             )
 
             response.enqueue(object : Callback<SignInModel> {
-                override fun onResponse(call: Call<SignInModel>, response: Response<SignInModel>) {
+                override fun onResponse(
+                    call: Call<SignInModel>,
+                    response: Response<SignInModel>
+                ) {
                     println(response.body())
                     if (response.isSuccessful && response.body()!!.code == "SUCCESS") {
                         signInButton.visibility = View.GONE
@@ -176,6 +206,44 @@ class LoginScreen : AppCompatActivity(), View.OnClickListener {
             )
         }
 
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        val notificationIntent = Intent(this@LoginScreen, MessageShowScreen::class.java).apply {
+            flags =
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val list = arrayListOf<String>()
+        for (key in intent?.extras?.keySet()!!) {
+            intent?.extras?.getString(key)?.let { list.add(it) }
+        }
+        notificationIntent.putExtra("notificationData", list)
+        startActivity(notificationIntent)
+
+        // testing
+        println("Value ===> ${intent?.extras?.getString("greeting1")}")
+
+        println("Number of extras ===> ${intent?.extras?.keySet()?.size}")
+        Toast.makeText(this, "Notification Received", Toast.LENGTH_LONG)
+            .show()
+
+    }
+
+    private fun getIntentData(intent: Intent?) {
+        if (null != intent) {
+            // Obtain the value in data.
+            val bundle = intent.extras
+            if (bundle != null) {
+                for (key in bundle.keySet()) {
+                    val content = bundle.getString(key)
+                    Log.i(TAG, "receive data from push, key = $key, content = $content")
+                }
+            }
+        } else {
+            Log.i(TAG, "intent is null")
+        }
     }
 
     override fun onClick(view: View?) {

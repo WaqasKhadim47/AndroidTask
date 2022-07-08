@@ -44,8 +44,11 @@ class PushNotificationService : FirebaseMessagingService() {
         // intent
         val notificationIntent = Intent(this, MessageShowScreen::class.java).apply {
             flags =
-                Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
+
+        notificationIntent.setAction(Intent.ACTION_MAIN);
+        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
         notificationIntent.putExtra("notificationData", list)
         val pendingIntent: PendingIntent
@@ -53,14 +56,15 @@ class PushNotificationService : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             pendingIntent = PendingIntent.getActivity(
                 this,
-                0,
+                System.currentTimeMillis().toInt(),
                 notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         } else {
             pendingIntent = PendingIntent.getActivity(
                 this,
-                0,
+                System.currentTimeMillis().toInt(),
                 notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
